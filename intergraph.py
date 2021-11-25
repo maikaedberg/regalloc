@@ -21,10 +21,9 @@ class InterGraph():
             for v in self.edges[vertex]:
                 if v in cards:
                     cards[v] += 1
-            max_card = max(cards.values())
-            vp = list(cards.keys())[list(cards.values()).index(max_card)]
-            SEO.append(vp)
-            cards.pop(vp)
+            v_max = max(cards, key = cards.get)
+            SEO.append(v_max)
+            cards.pop(v_max)
 
         return SEO
 
