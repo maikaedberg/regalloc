@@ -78,6 +78,65 @@ def crude_ssagen(tlv, cfg):
             if instr.opcode != 'phi': continue
             for lab_prev, root in instr.arg1.items():
                 instr.arg1[lab_prev] = ver_maps[lab_prev].get(root, root)
+                
+
+def null_choice(cfg):
+    '''remove a phi instr if it is redundent'''
+    for B in cfg._blockmap.values():
+        Bcopy =copy(B)
+        for instr in Bcopy.body:
+            if instr.opcode =='phi':
+                null = True 
+                for _,temp in instr.arg1:
+                    if temp != instr.dest: null = False
+                if null:
+                    B.body.remove(instr)
+
+def rename(cfg):
+    '''Remove a rename phi instr'''
+    init_args=compute_init_arg(cfg)
+    for B in cfg._blockmap.values():
+        for instr in B.body:
+            if instr.opcode =='phi':
+                dest_root, dest_ver = tuple(instr.dest.split('.'))
+                v = [dest_ver]
+                rename = True
+                for _,temp in instr.arg1:
+                    if not get_root(temp) in init_args:
+
+                        root, ver = tuple(temp.split('.') )
+                        if root != dest_root: 
+                            rename = False
+                        if len(v) <2 and ver != v[-1]:
+                            v.append(ver)
+                        elif not ver in v:
+                            rename = False
+                        if rename:
+                            instr.dest = dest_root+'.'+v[-1]
+                            for lab,temp in instr.arg1:
+                                phi = tuple()
+                                root, ver = tuple(temp.split('.') )
+                                if ver != v[-1]:
+                                    phi += (lab,dest_root+'.'+v[-1])
+                                else:
+                                    phi += (lab,temp)
+
+
+
+def optimize (cfg):
+    optimized = False
+    prev = cfg
+    while not optimized:
+        null_choice(cfg)
+        rename(cfg)
+        changed = True
+        for Lab,B in cfg._blockmap.items():
+            if B.body == prev._blockmap[Lab].body:
+                changed = False 
+        if not changed:
+            optimized = True
+        prev = cfg
+         
 
 # ------------------------------------------------------------------------------
 
