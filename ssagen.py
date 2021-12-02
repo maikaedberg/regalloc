@@ -43,6 +43,7 @@ def rewrite_temps(instr, fn):
 # ------------------------------------------------------------------------------
 # crude SSA gen
 
+
 def tmp_root(tmp):
     try: return tmp[:tmp.rindex('.')]
     except ValueError: return tmp
@@ -78,7 +79,14 @@ def crude_ssagen(tlv, cfg):
             if instr.opcode != 'phi': continue
             for lab_prev, root in instr.arg1.items():
                 instr.arg1[lab_prev] = ver_maps[lab_prev].get(root, root)
-                
+              
+
+
+              
+def get_root(temp):
+    '''Gets the root of a temporary, e.g %1.1 returns 1'''
+    l = temp.split(sep='.')
+    return l[0][1:]  
 
 def null_choice(cfg):
     '''remove a phi instr if it is redundent'''
@@ -94,7 +102,8 @@ def null_choice(cfg):
 
 def rename(cfg):
     '''Remove a rename phi instr'''
-    init_args=compute_init_arg(cfg)
+    # init_args=initial_live_in(cfg) need to compute livein for the first instruction
+    init_args = []
     for B in cfg._blockmap.values():
         for instr in B.body:
             if instr.opcode =='phi':
