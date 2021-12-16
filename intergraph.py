@@ -103,7 +103,7 @@ class InterGraph():
         alloc = dict()
 
         stack_size = len(self.spilled) * 8
-        col_to_reg = {1: '%%rax', 2: '%%rcx', 3:'%%rdx', 4:'%%rsi', 5:'%%rdi', 
+        col_to_reg = {1: '%%rax', 2: '%%rdi', 3: '%%rsi', 4: '%%rdx', 5: '%%rcx',
                       6:'%%r8', 7:'%%r9', 8:'%%r10', 9: '%%rbx', 10:'%%r12', 
                       11:'%%r13', 12:'%%r14', 13:'%%r15'}
         
