@@ -102,6 +102,11 @@ def null_choice(cfg):
 
 def rename(cfg):
     '''Remove a rename phi instr'''
+    # livein, liveout = dict(), dict()
+    # cfglib.recompute_liveness(cfg, livein, liveout)
+    
+    # init_instr= cfglib.
+    # init_args=
     # init_args=initial_live_in(cfg) need to compute livein for the first instruction
     init_args = []
     for B in cfg._blockmap.values():
