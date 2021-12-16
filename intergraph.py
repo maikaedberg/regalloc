@@ -8,6 +8,7 @@ class InterGraph():
         self.spilled = []
         
         self.og_color = dict()
+        self.color = dict()
 
     def build_edges(self, cfg):
         livein, liveout = dict(), dict()
@@ -45,7 +46,14 @@ class InterGraph():
 
         return SEO
 
-    def greedy_coloring(self, col : dict()):
+    def greedy_coloring(self, col=None):
+        """
+        Performs greedy coloring on either a given coloring or
+        on the pre-coloring if none is specified
+        Updates self.color with the result
+        """
+        if col is None:
+            col = self.og_color
 
         seo = self.max_cardinality_search()
 
@@ -62,12 +70,18 @@ class InterGraph():
                     argmin += 1
             col[v] = argmin
 
-        return col            
+        self.color = col            
 
-    def spill(self, col):
-
-        spill = max(col, key = col.get)
-        if col[spill] <= 13:
+    def spill(self):
+        """ 
+        Spill a temporary if the number of colours currently in the 
+        coloring is strictly greater than 13.
+        Spilling involves adding the temporary to the spilled set and
+        disconetting it from the graph.
+        We spill the temporary with the largest colour.
+        """
+        spill = max(self.color, key = self.color.get)
+        if self.color[spill] <= 13:
             return
 
         self.nodes.remove(spill)
@@ -79,20 +93,24 @@ class InterGraph():
                 pass
         self.spilled.append(spill)
 
-        col = self.greedy_coloring(self.og_color)
-        self.spill(col)
+        self.greedy_coloring()
+        self.spill()
 
     def get_allocation_record(self):
+        """
+        Returns a tuple composed of the stack size and the allocation record
+        """
         alloc = dict()
 
         stack_size = len(self.spilled) * 8
         col_to_reg = {1: '%%rax', 2: '%%rcx', 3:'%%rdx', 4:'%%rsi', 5:'%%rdi', 
                       6:'%%r8', 7:'%%r9', 8:'%%r10', 9: '%%rbx', 10:'%%r12', 
                       11:'%%r13', 12:'%%r14', 13:'%%r15'}
-                  
-        col = self.spill(self.og_color)
+        
+        self.greedy_coloring()
+        self.spill()
 
-        for vertex, color in col.items():
+        for vertex, color in self.color.items():
             alloc[vertex] = col_to_reg[color]
         for i in range(len(self.spilled)):
             alloc[self.spilled[i]] = -(i + 1) * 8
