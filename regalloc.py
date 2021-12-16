@@ -22,9 +22,8 @@ if __name__ == "__main__":
 
     tac_decls = load_tac(source_path)
     for decl in tac_decls:
-        if not isinstance(decl, Proc):
-            continue
-        regalloc(decl)
+        if isinstance(decl, Proc):
+            regalloc(decl)
 
     etac = [decl.js_obj for decl in tac_decls]
 
