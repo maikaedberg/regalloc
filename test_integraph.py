@@ -48,8 +48,8 @@ class max_card_search(unittest.TestCase):
                                 "e": ["c", "d"]}
         
         SEO = self.intergraph.max_cardinality_search()
-        self.assertEqual(is_simplicial_order(SEO, self.intergraph.edges), True)
-    
+        self.assertTrue(is_simplicial_order(SEO, self.intergraph.edges))
+ 
     def tearDown(self):
         del self.intergraph
 
@@ -98,6 +98,41 @@ class getAllocationRecord(unittest.TestCase):
     def tearDown(self):
         del self.intergraph
 
+class testsOnFib(unittest.TestCase):
+    def setUp(self):
+        fname = "./examples/fib.tac.json"
+        tac = load_tac(fname)
+        self.fib = tac[0]
+        self.main = tac[1]
+    
+    def test_MCS_fib(self):
+        def test_SEO(proc):
+            intergraph = InterGraph(proc)
+            SEO = intergraph.max_cardinality_search()
+            self.assertTrue(is_simplicial_order(SEO, intergraph.edges))
+
+            del intergraph
+
+        test_SEO(self.fib)
+        test_SEO(self.main)
+        
+    def test_alloc_fib(self):
+        def test_alloc(proc):
+            intergraph = InterGraph(proc)
+            intergraph.greedy_coloring()
+            stacksize, alloc = intergraph.get_allocation_record()
+            
+            self.assertEqual(stacksize, 0)
+            self.assertEqual(len(alloc), len(intergraph.nodes))
+
+            for node in intergraph.nodes:
+                for neighbour in intergraph.edges[node]:
+                    self.assertNotEqual(alloc[node], alloc[neighbour])
+            
+            del intergraph
+        
+        test_alloc(self.fib)
+        test_alloc(self.main)
 
 if __name__ == "__main__":
     unittest.main()
