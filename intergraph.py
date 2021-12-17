@@ -13,7 +13,7 @@ class InterGraph():
     def build_edges(self, cfg):
         livein, liveout = dict(), dict()
         recompute_liveness(cfg, livein, liveout)
-        for instr in cfg.instrs:
+        for instr in cfg.instrs():
             if instr.opcode == 'copy':
                 for x in liveout[instr]:
                     self.edges.setdefault(x, []) + [instr.arg1 + instr.dest]
@@ -31,8 +31,15 @@ class InterGraph():
 
     def max_cardinality_search(self):
         """Returns a SEO from the current interference graph"""
+        node = None
+        # Get one element from the set
+        for node in self.nodes:
+            vertex = node
+            break
 
-        vertex = self.nodes[0]
+        if node is None:
+            return []
+
         SEO = [vertex]
         cards = {v : 0 for v in self.edges if v != vertex}
 

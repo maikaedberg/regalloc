@@ -6,7 +6,16 @@ Control Flow Graphs (CFG)
 
 import tac
 from io import StringIO
+import itertools
 
+# ------------------------------------------------------------------------------
+
+def peek(instr_pairs):
+    try:
+        first = next(instr_pairs)
+    except:
+        return []
+    return itertools.chain([first], instr_pairs)
 # ------------------------------------------------------------------------------
 
 class Block:
@@ -365,10 +374,13 @@ def recompute_liveness(cfg, livein, liveout):
             dirty = True
     while dirty:
         dirty = False
-        for (li, i, lj, j) in cfg.instr_pairs(labeled=True):
+        instr_pairs = peek(cfg.instr_pairs(labeled=True))
+        for (li, i, lj, j) in instr_pairs:
             if li == lj: update_livein(i, livein[j])
             else: update_livein(i, filter_liveset(li, livein[j]))
-    for li, i, lj, j in cfg.instr_pairs(labeled=True):
+
+    instr_pairs = peek(cfg.instr_pairs(labeled=True))
+    for li, i, lj, j in instr_pairs:
         liveout[i].update(filter_liveset(li, livein[j]))
     # fix the livein sets to remove tuples
     for i, li in livein.items():
