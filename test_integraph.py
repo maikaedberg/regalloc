@@ -60,8 +60,29 @@ class getAllocationRecord(unittest.TestCase):
         self.intergraph = InterGraph(tac)
     
     def test_allocation_empty(self):
-        rec = self.intergraph.get_allocation_record()
-        print(rec)
+        stack_size, alloc = self.intergraph.get_allocation_record()
+        self.assertEqual(stack_size, 0)
+        self.assertEqual(alloc, {})
+    
+    def test_allocation_small(self):
+        self.intergraph.nodes = {"a","b","c","d","e"}
+        self.intergraph.edges = {"a": ["d"],
+                                "b": ["c", "d"],
+                                "c": ["b", "d", "e"],
+                                "d": ["a","b", "c", "e"],
+                                "e": ["c", "d"]}
+        self.intergraph.greedy_coloring()
+        stacksize, alloc = self.intergraph.get_allocation_record()
+        self.assertEqual(stacksize, 0)
+        self.assertEqual(len(alloc), len(self.intergraph.nodes))
+
+        for node in self.intergraph.nodes:
+            for neighbour in self.intergraph.edges[node]:
+                self.assertNotEqual(alloc[node], alloc[neighbour])
+
+    def tearDown(self):
+        del self.intergraph
+
 
 if __name__ == "__main__":
     unittest.main()

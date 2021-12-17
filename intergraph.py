@@ -82,7 +82,7 @@ class InterGraph():
         seo = self.max_cardinality_search()
 
         for u in self.nodes:
-            col.set_default(u, 0)
+            col.setdefault(u, 0)
         for v in seo:
             if col[v] != 0:
                 continue
