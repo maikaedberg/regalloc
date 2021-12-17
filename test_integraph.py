@@ -1,11 +1,9 @@
+from json import load
 import unittest
 from intergraph import InterGraph
 from cfg import CFG, Block
-edges = {"a": ["d"],
-                                "b": ["c", "d"],
-                                "c": ["b", "d", "e"],
-                                "d": ["a","b", "c", "e"],
-                                "e": ["c", "d"]}
+from tac import load_tac, Proc
+
 def is_simplicial(restriction, edges):
     neighbours = set()
     for node in edges[restriction[-1]]:
@@ -34,8 +32,8 @@ def is_simplicial_order(SEO, edges):
 class max_card_search(unittest.TestCase):
 
     def setUp(self):
-        cfg = CFG("Empty", None, [Block("lbl")])
-        self.intergraph = InterGraph(cfg)
+        tac = Proc("Empty", [], [])
+        self.intergraph = InterGraph(tac)
     
     def test_search_empty(self):
         SEO = self.intergraph.max_cardinality_search()
@@ -55,6 +53,15 @@ class max_card_search(unittest.TestCase):
     def tearDown(self):
         del self.intergraph
 
+class getAllocationRecord(unittest.TestCase):
+
+    def setUp(self):
+        tac = Proc("Empty", [], [])
+        self.intergraph = InterGraph(tac)
+    
+    def test_allocation_empty(self):
+        rec = self.intergraph.get_allocation_record()
+        print(rec)
 
 if __name__ == "__main__":
     unittest.main()

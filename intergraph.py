@@ -104,6 +104,8 @@ class InterGraph():
         disconetting it from the graph.
         We spill the temporary with the largest colour.
         """
+        if len(self.color) == 0:
+            return
         spill = max(self.color, key = self.color.get)
         if self.color[spill] <= 13:
             return
