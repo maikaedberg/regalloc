@@ -28,7 +28,14 @@ class InterGraph():
                     self.edges.setdefault(instr.dest, []).append(x)
                     self.nodes.add(x)
                 self.nodes.add(instr.dest)
-
+    def pre_color(tlv):
+        pre_color = dict()
+        for i in range(max(len(tlv.t_args), 6)):
+            pre_color[i + 2] = tlv.t_args[i]
+        assert tlv.body[-1].opcode == 'ret'
+        if tlv.body[-1].dest is not None:
+            pre_color[i] = 1
+            
     def max_cardinality_search(self):
         """Returns a SEO from the current interference graph"""
 
