@@ -82,12 +82,6 @@ def crude_ssagen(tlv, cfg):
               
 
 
-              
-def get_root(temp):
-    '''Gets the root of a temporary, e.g %1.1 returns 1'''
-    l = temp.split(sep='.')
-    return l[0][1:]  
-
 def null_choice(cfg):
     '''remove a phi instr if it is redundent'''
     for B in cfg._blockmap.values():
@@ -101,14 +95,11 @@ def null_choice(cfg):
                     B.body.remove(instr)
 
 def rename(cfg):
-    '''Remove a rename phi instr'''
-    # livein, liveout = dict(), dict()
-    # cfglib.recompute_liveness(cfg, livein, liveout)
-    
-    # init_instr= cfglib.
-    # init_args=
-    # init_args=initial_live_in(cfg) need to compute livein for the first instruction
-    init_args = []
+    '''Remove a rename phi instr'''    
+    livein, liveout = dict(), dict()
+    cfglib.recompute_liveness(cfg, livein, liveout)
+    Bl=next(cfg.nodes) 
+    init_args=livein[Bl.first_instr()] #livein for the first instruction
     for B in cfg._blockmap.values():
         for instr in B.body:
             if instr.opcode =='phi':
@@ -116,7 +107,7 @@ def rename(cfg):
                 v = [dest_ver]
                 rename = True
                 for _,temp in instr.arg1:
-                    if not get_root(temp) in init_args:
+                    if not tmp_root(temp) in init_args:
 
                         root, ver = tuple(temp.split('.') )
                         if root != dest_root: 
