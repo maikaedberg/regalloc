@@ -1,14 +1,24 @@
-from cfg import CFG, recompute_liveness
+from cfg import CFG, recompute_liveness, infer
 
 class InterGraph():
-    def __init__(self, cfg):
+    def __init__(self, tlv):
         self.nodes = set()
+
+        self.cfg = infer(tlv)
         self.edges = {}
-        self.build_edges(cfg)
+        self.build_edges(self.cfg)
         self.spilled = []
         
         self.og_color = dict()
         self.color = dict()
+
+    def pre_color(tlv):
+        pre_color = dict()
+        for i in range(max(len(tlv.t_args), 6)):
+            pre_color[i + 2] = tlv.t_args[i]
+        assert tlv.body[-1].opcode == 'ret'
+        if tlv.body[-1].dest is not None:
+            pre_color[i] = 1
 
     def build_edges(self, cfg):
         livein, liveout = dict(), dict()
