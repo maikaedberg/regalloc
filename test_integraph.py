@@ -79,6 +79,21 @@ class getAllocationRecord(unittest.TestCase):
         for node in self.intergraph.nodes:
             for neighbour in self.intergraph.edges[node]:
                 self.assertNotEqual(alloc[node], alloc[neighbour])
+    
+    def test_allocation_fib(self):
+        fname = "./examples/fib.tac.json"
+        tac = load_tac(fname)
+        for decl in tac:
+            if isinstance(decl, Proc):
+                integraph = InterGraph(decl)
+                integraph.greedy_coloring()
+                stacksize, alloc = integraph.get_allocation_record()
+                self.assertEqual(stacksize, 0)
+                self.assertEqual(len(alloc), len(integraph.nodes))
+
+                for node in self.intergraph.nodes:
+                    for neighbour in self.intergraph.edges[node]:
+                        self.assertNotEqual(alloc[node], alloc[neighbour])
 
     def tearDown(self):
         del self.intergraph
