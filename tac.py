@@ -171,6 +171,8 @@ class Proc:
         self.name = name
         self.body = body or []
         self.t_args = tuple(t_args)
+        self.stacksize = 0
+        self.alloc = dict()
 
     def __str__(self):
         result = StringIO()
@@ -193,6 +195,8 @@ class Proc:
     def js_obj(self):
         return {'proc': self.name,
                 'args': list(self.t_args),
+                'stacksize': self.stacksize,
+                'alloc': self.alloc,
                 'body': [i.js_obj for i in self.body]}
 
 class Gvar:

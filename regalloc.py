@@ -3,8 +3,12 @@ import json
 from tac import Proc, load_tac
 from intergraph import InterGraph
 
-def regalloc(fname):
-    pass
+def regalloc(decl):
+    integraph = InterGraph(decl)
+    integraph.greedy_coloring()
+    stacksize, alloc = integraph.get_allocation_record()
+    decl.stacksize = stacksize
+    decl.alloc = alloc
 
 if __name__ == "__main__":
     argparser = argparse.ArgumentParser(
