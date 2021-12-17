@@ -12,14 +12,6 @@ class InterGraph():
         self.og_color = dict()
         self.color = dict()
 
-    def pre_color(tlv):
-        pre_color = dict()
-        for i in range(max(len(tlv.t_args), 6)):
-            pre_color[i + 2] = tlv.t_args[i]
-        assert tlv.body[-1].opcode == 'ret'
-        if tlv.body[-1].dest is not None:
-            pre_color[i] = 1
-
     def build_edges(self, cfg):
         livein, liveout = dict(), dict()
         recompute_liveness(cfg, livein, liveout)
@@ -34,10 +26,13 @@ class InterGraph():
                 self.nodes.add(instr.dest)
             else:
                 for x in liveout[instr]:
-                    self.edges.setdefault(x, []).append(instr.dest)
-                    self.edges.setdefault(instr.dest, []).append(x)
+                    if instr.dest is not None:
+                        self.edges.setdefault(x, []).append(instr.dest)
+                        self.edges.setdefault(instr.dest, []).append(x)
                     self.nodes.add(x)
-                self.nodes.add(instr.dest)
+                if instr.dest is not None:
+                    self.nodes.add(instr.dest)
+
     def pre_color(tlv):
         pre_color = dict()
         for i in range(max(len(tlv.t_args), 6)):
@@ -77,7 +72,7 @@ class InterGraph():
         Updates self.color with the result
         """
         if col is None:
-            col = self.og_color
+            col = self.og_color.copy()
 
         seo = self.max_cardinality_search()
 
