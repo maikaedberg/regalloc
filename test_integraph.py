@@ -19,7 +19,6 @@ def is_simplicial(restriction, edges):
         # For every neighbour, we check that its neighbours is included
         # in the set of neighbours of the last element of the ordering
         if neighbours.intersection(neighbours2) != neighbours:
-            print(neighbours, neighbours2)
             return False
     return True
 
@@ -80,21 +79,6 @@ class getAllocationRecord(unittest.TestCase):
             for neighbour in self.intergraph.edges[node]:
                 self.assertNotEqual(alloc[node], alloc[neighbour])
     
-    def test_allocation_fib(self):
-        fname = "./examples/fib.tac.json"
-        tac = load_tac(fname)
-        for decl in tac:
-            if isinstance(decl, Proc):
-                integraph = InterGraph(decl)
-                integraph.greedy_coloring()
-                stacksize, alloc = integraph.get_allocation_record()
-                self.assertEqual(stacksize, 0)
-                self.assertEqual(len(alloc), len(integraph.nodes))
-
-                for node in self.intergraph.nodes:
-                    for neighbour in self.intergraph.edges[node]:
-                        self.assertNotEqual(alloc[node], alloc[neighbour])
-
     def tearDown(self):
         del self.intergraph
 
@@ -133,6 +117,10 @@ class testsOnFib(unittest.TestCase):
         
         test_alloc(self.fib)
         test_alloc(self.main)
+
+    def tearDown(self):
+        del self.fib
+        del self.main
 
 if __name__ == "__main__":
     unittest.main()
