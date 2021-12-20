@@ -28,6 +28,13 @@ def is_simplicial_order(SEO, edges):
             return False
     return True
 
+class testBuildEdges(unittest.TestCase):
+
+    def test_edges_empty(self):
+        tac = Proc("Empty", [], [])
+        intergraph = InterGraph(tac)
+        self.assertEqual(intergraph.edges, {})
+
 class max_card_search(unittest.TestCase):
 
     def setUp(self):
@@ -88,6 +95,24 @@ class testsOnFib(unittest.TestCase):
         tac = load_tac(fname)
         self.fib = tac[0]
         self.main = tac[1]
+    
+    def test_edges_fib(self):
+        def test_edges(proc):
+            intergraph = InterGraph(proc)
+            edges = intergraph.edges
+
+            for key, value in edges.items():
+                self.assertIsInstance(key, str)
+                self.assertIsInstance(value, list)
+                self.assertEqual(key[0], '%')
+                for val in value:
+                    self.assertIsInstance(val, str)
+                    self.assertNotEqual(key, val)
+                    self.assertEqual(val[0], '%')
+
+        test_edges(self.fib)
+        test_edges(self.main) 
+            
     
     def test_MCS_fib(self):
         def test_SEO(proc):
