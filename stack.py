@@ -14,8 +14,8 @@ class Stack():
         self.name = tac["proc"][1:]
         self.asm = []
         self.temp_map = {}
-        self.stacksize = tac["proc"]["stacksize"]
-        self.alloc = tac["proc"]["alloc"]
+        self.stacksize = tac["stacksize"]
+        self.alloc = tac["alloc"]
         self.temp_count = 0
         self.rsp = "%rbp"
         self.load_temp_map()
@@ -48,7 +48,7 @@ class Stack():
             except KeyError:
                 print(code)
             if temp in self.alloc:
-                self.temp_map[temp] = self.alloc[temp]
+                self.temp_map[temp] = self.alloc[temp][1:]
             elif temp is not None and temp[0] == '%' and temp[1:].isnumeric():
                 if temp not in self.temp_map.keys():
                     self.temp_count += 1

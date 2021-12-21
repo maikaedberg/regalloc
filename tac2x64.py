@@ -193,7 +193,7 @@ def compile_tac(asm, fname):
     with open(sname, 'w') as afp:
         print(*asm, file=afp, sep='\n')
     # print(f'{fname} -> {sname}')
-    os.system(f'gcc -g -o {xname} {sname} py/bx_runtime.c')
+    os.system(f'gcc -g -o {xname} {sname} bx_runtime.c')
     # print(f'{sname} -> {xname}')
 
 if __name__ == '__main__':

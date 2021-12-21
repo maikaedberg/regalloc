@@ -7,7 +7,7 @@ col_to_reg = {1: '%%rax', 2: '%%rdi', 3: '%%rsi', 4: '%%rdx', 5: '%%rcx',
 class InterGraph():
     def __init__(self, tlv):
         self.nodes = set()
-
+        
         self.cfg = infer(tlv)
         self.edges = {}
         self.build_edges(self.cfg)
@@ -31,7 +31,6 @@ class InterGraph():
                     self.nodes.add(x)
                 self.nodes.add(instr.arg1)
                 self.nodes.add(instr.dest)
-
             else:
                 for x in liveout[instr]:
                     if instr.dest is not None and x != instr.dest:

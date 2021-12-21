@@ -162,8 +162,9 @@ class Instr:
     @property
     def js_obj(self):
         """A basic Python object ready to JSONify with json.dump()"""
+        args = [i for i in [self.arg1, self.arg2] if i is not None]
         return {'opcode': self.opcode,
-                'args': (self.arg1, self.arg2),
+                'args': args,
                 'result': self.dest}
 
 class Proc:
