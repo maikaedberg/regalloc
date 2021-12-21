@@ -1,5 +1,9 @@
 from cfg import CFG, recompute_liveness, infer
 
+col_to_reg = {1: '%%rax', 2: '%%rdi', 3: '%%rsi', 4: '%%rdx', 5: '%%rcx',
+              6:'%%r8', 7:'%%r9', 8:'%%r10', 9: '%%rbx', 10:'%%r12', 
+              11:'%%r13', 12:'%%r14', 13:'%%r15'}
+              
 class InterGraph():
     def __init__(self, tlv):
         self.nodes = set()
@@ -89,6 +93,11 @@ class InterGraph():
             if col[v] != 0:
                 continue
 
+            if v[:2] == "%%":
+                for color, reg in col_to_reg.items():
+                    if reg == v:
+                        col[v] = color
+
             visited = set()
             for nghb in self.edges[v]:
                 visited.add(col[nghb])
@@ -100,6 +109,7 @@ class InterGraph():
 
         self.color = col
 
+    
     def spill(self):
         """ 
         Spill a temporary if the number of colours currently in the 
@@ -110,7 +120,6 @@ class InterGraph():
         """
         if len(self.color) == 0:
             return
-
         spill = max(self.color, key = self.color.get)
         if self.color[spill] <= 13:
             return
@@ -134,9 +143,6 @@ class InterGraph():
         alloc = dict()
 
         stack_size = len(self.spilled) * 8
-        col_to_reg = {1: '%%rax', 2: '%%rdi', 3: '%%rsi', 4: '%%rdx', 5: '%%rcx',
-                      6:'%%r8', 7:'%%r9', 8:'%%r10', 9: '%%rbx', 10:'%%r12', 
-                      11:'%%r13', 12:'%%r14', 13:'%%r15'}
         
         self.greedy_coloring()
         self.spill()

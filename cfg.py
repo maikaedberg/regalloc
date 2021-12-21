@@ -387,6 +387,14 @@ def recompute_liveness(cfg, livein, liveout):
         livein[i] = {x[1] if isinstance(x, tuple) else x \
                      for x in li}
 
+    for i in cfg.instrs():
+        if i.opcode in {'mul', 'div', 'mod'}:
+            livein[i].add("%%rax")
+            liveout[i].add("%%rax")
+        elif i.opcode in {'shl', 'shr'}:
+            livein[i].add("%%rcx")
+            liveout[i].add("%%rcx")   
+
 # ------------------------------------------------------------------------------
 
 if __name__ == '__main__':
