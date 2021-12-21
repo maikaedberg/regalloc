@@ -10,6 +10,7 @@ class InterGraph():
         self.spilled = []
         
         self.og_color = dict()
+        self.pre_color(tlv)
         self.color = dict()
 
     def build_edges(self, cfg):
@@ -18,28 +19,33 @@ class InterGraph():
         for instr in cfg.instrs():
             if instr.opcode == 'copy':
                 for x in liveout[instr]:
-                    self.edges.setdefault(x, []) + [instr.arg1 + instr.dest]
-                    self.edges.setdefault(instr.arg1, []).append(x)
-                    self.edges.setdefault(instr.dest, []).append(x)
+                    if x != instr.arg1:
+                        self.edges.setdefault(x, []).append(instr.arg1)
+                        self.edges.setdefault(instr.arg1, []).append(x)
+                    if x != instr.dest:
+                        self.edges.setdefault(instr.dest, []).append(x)
                     self.nodes.add(x)
                 self.nodes.add(instr.arg1)
                 self.nodes.add(instr.dest)
+
             else:
                 for x in liveout[instr]:
-                    if instr.dest is not None:
+                    if instr.dest is not None and x != instr.dest:
                         self.edges.setdefault(x, []).append(instr.dest)
                         self.edges.setdefault(instr.dest, []).append(x)
                     self.nodes.add(x)
                 if instr.dest is not None:
                     self.nodes.add(instr.dest)
 
-    def pre_color(tlv):
-        pre_color = dict()
-        for i in range(max(len(tlv.t_args), 6)):
-            pre_color[i + 2] = tlv.t_args[i]
-        assert tlv.body[-1].opcode == 'ret'
-        if tlv.body[-1].dest is not None:
-            pre_color[i] = 1
+        for (k, l) in self.edges.items():
+            self.edges[k] = [i for i in l if i != k]
+        
+    def pre_color(self, tlv):
+        for i in range(min(len(tlv.t_args), 6)):
+            self.og_color[tlv.t_args[i]] = i + 2
+        #assert tlv.body[-1].opcode == 'ret'
+        #if tlv.body[-1].dest is not None:
+        #    self.og_color[1] = i
             
     def max_cardinality_search(self):
         """Returns a SEO from the current interference graph"""
@@ -77,19 +83,22 @@ class InterGraph():
         seo = self.max_cardinality_search()
 
         for u in self.nodes:
-            col.setdefault(u, 0)
+            if u not in col: 
+                col[u] = 0
         for v in seo:
             if col[v] != 0:
                 continue
-            argmin = 1
+
             visited = set()
             for nghb in self.edges[v]:
                 visited.add(col[nghb])
-                while(argmin in visited):
-                    argmin += 1
+
+            argmin = 1
+            while argmin in visited:
+                argmin += 1
             col[v] = argmin
 
-        self.color = col            
+        self.color = col
 
     def spill(self):
         """ 
@@ -101,6 +110,7 @@ class InterGraph():
         """
         if len(self.color) == 0:
             return
+
         spill = max(self.color, key = self.color.get)
         if self.color[spill] <= 13:
             return
