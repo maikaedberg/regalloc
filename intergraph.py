@@ -89,6 +89,7 @@ class InterGraph():
         for u in self.nodes:
             if u not in col: 
                 col[u] = 0
+                
         for v in seo:
             if col[v] != 0:
                 continue
