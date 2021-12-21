@@ -1,151 +1,151 @@
-from json import load
-import unittest
-from intergraph import InterGraph
-from cfg import CFG, Block
-from tac import load_tac, Proc
+from cfg import CFG, recompute_liveness, infer
 
-def is_simplicial(restriction, edges):
-    neighbours = set()
-    for node in edges[restriction[-1]]:
-        if node in restriction:
-            neighbours.add(node)
-    
-    for neighbour in neighbours:
-        neighbours2 = {neighbour} 
-        for neighbour2 in edges[neighbour]:
-            if neighbour2 in restriction:
-                neighbours2.add(neighbour2)
+class InterGraph():
+    def __init__(self, tlv):
+        self.nodes = set()
+
+        self.cfg = infer(tlv)
+        self.edges = {}
+        self.build_edges(self.cfg)
+        self.spilled = []
         
-        # For every neighbour, we check that its neighbours is included
-        # in the set of neighbours of the last element of the ordering
-        if neighbours.intersection(neighbours2) != neighbours:
-            return False
-    return True
+        self.og_color = dict()
+        self.pre_color(tlv)
+        self.color = dict()
 
-def is_simplicial_order(SEO, edges):
-    for i in range(1, len(SEO)):
-        if not is_simplicial(SEO[:i], edges):
-            return False
-    return True
+    def build_edges(self, cfg):
+        livein, liveout = dict(), dict()
+        recompute_liveness(cfg, livein, liveout)
+        for instr in cfg.instrs():
+            if instr.opcode == 'copy':
+                for x in liveout[instr]:
+                    if x != instr.arg1:
+                        self.edges.setdefault(x, []).append(instr.arg1)
+                        self.edges.setdefault(instr.arg1, []).append(x)
+                    if x != instr.dest:
+                        self.edges.setdefault(instr.dest, []).append(x)
+                    self.nodes.add(x)
+                self.nodes.add(instr.arg1)
+                self.nodes.add(instr.dest)
 
-class testBuildEdges(unittest.TestCase):
+            else:
+                for x in liveout[instr]:
+                    if instr.dest is not None and x != instr.dest:
+                        self.edges.setdefault(x, []).append(instr.dest)
+                        self.edges.setdefault(instr.dest, []).append(x)
+                    self.nodes.add(x)
+                if instr.dest is not None:
+                    self.nodes.add(instr.dest)
 
-    def test_edges_empty(self):
-        tac = Proc("Empty", [], [])
-        intergraph = InterGraph(tac)
-        self.assertEqual(intergraph.edges, {})
+    def pre_color(self, tlv):
+        for i in range(min(len(tlv.t_args), 6)):
+            self.og_color[tlv.t_args[i]] = i + 2
 
-class max_card_search(unittest.TestCase):
-
-    def setUp(self):
-        tac = Proc("Empty", [], [])
-        self.intergraph = InterGraph(tac)
-    
-    def test_search_empty(self):
-        SEO = self.intergraph.max_cardinality_search()
-        self.assertEqual(SEO, [])
-    
-    def test_search_small(self):
-        self.intergraph.nodes = {"a","b","c","d","e"}
-        self.intergraph.edges = {"a": ["d"],
-                                "b": ["c", "d"],
-                                "c": ["b", "d", "e"],
-                                "d": ["a","b", "c", "e"],
-                                "e": ["c", "d"]}
-        
-        SEO = self.intergraph.max_cardinality_search()
-        self.assertTrue(is_simplicial_order(SEO, self.intergraph.edges))
- 
-    def tearDown(self):
-        del self.intergraph
-
-class getAllocationRecord(unittest.TestCase):
-
-    def setUp(self):
-        tac = Proc("Empty", [], [])
-        self.intergraph = InterGraph(tac)
-    
-    def test_allocation_empty(self):
-        stack_size, alloc = self.intergraph.get_allocation_record()
-        self.assertEqual(stack_size, 0)
-        self.assertEqual(alloc, {})
-    
-    def test_allocation_small(self):
-        self.intergraph.nodes = {"a","b","c","d","e"}
-        self.intergraph.edges = {"a": ["d"],
-                                "b": ["c", "d"],
-                                "c": ["b", "d", "e"],
-                                "d": ["a","b", "c", "e"],
-                                "e": ["c", "d"]}
-        self.intergraph.greedy_coloring()
-        stacksize, alloc = self.intergraph.get_allocation_record()
-        self.assertEqual(stacksize, 0)
-        self.assertEqual(len(alloc), len(self.intergraph.nodes))
-
-        for node in self.intergraph.nodes:
-            for neighbour in self.intergraph.edges[node]:
-                self.assertNotEqual(alloc[node], alloc[neighbour])
-    
-    def tearDown(self):
-        del self.intergraph
-
-class testsOnFib(unittest.TestCase):
-    def setUp(self):
-        fname = "./examples/fib.tac.json"
-        tac = load_tac(fname)
-        self.fib = tac[0]
-        self.main = tac[1]
-    
-    def test_edges_fib(self):
-        def test_edges(proc):
-            intergraph = InterGraph(proc)
-            edges = intergraph.edges
-
-            for key, value in edges.items():
-                self.assertIsInstance(key, str)
-                self.assertIsInstance(value, list)
-                self.assertEqual(key[0], '%')
-                for val in value:
-                    self.assertIsInstance(val, str)
-                    self.assertNotEqual(key, val)
-                    self.assertEqual(val[0], '%')
-
-        test_edges(self.fib)
-        test_edges(self.main) 
+        for i in range(1, len(tlv.body), -1):
+            if tlv.body[-1].opcode == 'ret':
+                if tlv.body[-1].dest is not None:
+                    self.og_color[1] = i
+                else:
+                    break
             
-    
-    def test_MCS_fib(self):
-        def test_SEO(proc):
-            intergraph = InterGraph(proc)
-            SEO = intergraph.max_cardinality_search()
-            self.assertTrue(is_simplicial_order(SEO, intergraph.edges))
+    def max_cardinality_search(self):
+        """Returns a SEO from the current interference graph"""
+        node = None
+        # Get one element from the set
+        for node in self.nodes:
+            vertex = node
+            break
 
-            del intergraph
+        if node is None:
+            return []
 
-        test_SEO(self.fib)
-        test_SEO(self.main)
+        SEO = [vertex]
+        cards = {v : 0 for v in self.edges if v != vertex}
+
+        while len(SEO) < len(self.nodes):
+            for v in self.edges[vertex]:
+                if v in cards:
+                    cards[v] += 1
+            v_max = max(cards, key = cards.get)
+            SEO.append(v_max)
+            cards.pop(v_max)
+
+        return SEO
+
+    def greedy_coloring(self, col=None):
+        """
+        Performs greedy coloring on either a given coloring or
+        on the pre-coloring if none is specified
+        Updates self.color with the result
+        """
+        if col is None:
+            col = self.og_color.copy()
+
+        seo = self.max_cardinality_search()
+
+        for u in self.nodes:
+            if u not in col: 
+                col[u] = 0
+        for v in seo:
+            if col[v] != 0:
+                continue
+
+            visited = set()
+            for nghb in self.edges[v]:
+                visited.add(col[nghb])
+
+            argmin = 1
+            while argmin in visited:
+                argmin += 1
+            col[v] = argmin
+
+        self.color = col
+
+    def spill(self):
+        """ 
+        Spill a temporary if the number of colours currently in the 
+        coloring is strictly greater than 13.
+        Spilling involves adding the temporary to the spilled set and
+        disconetting it from the graph.
+        We spill the temporary with the largest colour.
+        """
+        if len(self.color) == 0:
+            return
+
+        spill = max(self.color, key = self.color.get)
+        if self.color[spill] <= 13:
+            return
+
+        self.nodes.remove(spill)
+        del self.edges[spill]
+        for nghbs in self.edges.values():
+            try:
+                nghbs.remove(spill)
+            except ValueError:
+                pass
+        self.spilled.append(spill)
+
+        self.greedy_coloring()
+        self.spill()
+
+    def get_allocation_record(self):
+        """
+        Returns a tuple composed of the stack size and the allocation record
+        """
+        alloc = dict()
+
+        stack_size = len(self.spilled) * 8
+        col_to_reg = {1: '%%rax', 2: '%%rdi', 3: '%%rsi', 4: '%%rdx', 5: '%%rcx',
+                      6:'%%r8', 7:'%%r9', 8:'%%r10', 9: '%%rbx', 10:'%%r12', 
+                      11:'%%r13', 12:'%%r14', 13:'%%r15'}
         
-    def test_alloc_fib(self):
-        def test_alloc(proc):
-            intergraph = InterGraph(proc)
-            intergraph.greedy_coloring()
-            stacksize, alloc = intergraph.get_allocation_record()
+        self.greedy_coloring()
+        self.spill()
+
+        for vertex, color in self.color.items():
+            alloc[vertex] = col_to_reg[color]
+        for i in range(len(self.spilled)):
+            alloc[self.spilled[i]] = -(i + 1) * 8
+
+        return (stack_size, alloc)
             
-            self.assertEqual(stacksize, 0)
-            self.assertEqual(len(alloc), len(intergraph.nodes))
-
-            for node in intergraph.nodes:
-                for neighbour in intergraph.edges[node]:
-                    self.assertNotEqual(alloc[node], alloc[neighbour])
-            
-            del intergraph
-        
-        test_alloc(self.fib)
-        test_alloc(self.main)
-
-    def tearDown(self):
-        del self.fib
-        del self.main
-
-if __name__ == "__main__":
-    unittest.main()
