@@ -14,8 +14,11 @@ class Stack():
         self.name = tac["proc"][1:]
         self.asm = []
         self.temp_map = {}
+
         self.stacksize = tac["stacksize"]
         self.alloc = tac["alloc"]
+        self.alloc_reg = list(set(self.alloc.values()))
+
         self.temp_count = 0
         self.rsp = "%rbp"
         self.load_temp_map()
