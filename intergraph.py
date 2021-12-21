@@ -20,25 +20,33 @@ class InterGraph():
     def build_edges(self, cfg):
         livein, liveout = dict(), dict()
         recompute_liveness(cfg, livein, liveout)
+
         for instr in cfg.instrs():
             if instr.opcode == 'copy':
                 for x in liveout[instr]:
                     if x != instr.arg1:
-                        self.edges.setdefault(x, []).append(instr.arg1)
-                        self.edges.setdefault(instr.arg1, []).append(x)
+                        self.edges.setdefault(x, set()).add(instr.arg1)
+                        self.edges.setdefault(instr.arg1, set()).add(x)
                     if x != instr.dest:
-                        self.edges.setdefault(instr.dest, []).append(x)
+                        self.edges.setdefault(instr.dest, set()).add(x)
                     self.nodes.add(x)
+                    self.edges.setdefault(x, set())
                 self.nodes.add(instr.arg1)
                 self.nodes.add(instr.dest)
+                self.edges.setdefault(instr.arg1, set())
+                self.edges.setdefault(instr.dest, set())
             else:
                 for x in liveout[instr]:
                     if instr.dest is not None and x != instr.dest:
-                        self.edges.setdefault(x, []).append(instr.dest)
-                        self.edges.setdefault(instr.dest, []).append(x)
+                        self.edges.setdefault(x, set()).add(instr.dest)
+                        self.edges.setdefault(instr.dest, set()).add(x)
                     self.nodes.add(x)
+                    self.edges.setdefault(x, set())
                 if instr.dest is not None:
                     self.nodes.add(instr.dest)
+                    self.edges.setdefault(instr.dest, set())
+        print(self.edges)
+
 
     def pre_color(self, tlv):
         for i in range(min(len(tlv.t_args), 6)):
@@ -90,13 +98,14 @@ class InterGraph():
                 col[u] = 0
                 
         for v in seo:
-            if col[v] != 0:
-                continue
-
             if v[:2] == "%%":
                 for color, reg in col_to_reg.items():
                     if reg == v:
                         col[v] = color
+
+        for v in seo:
+            if col[v] != 0:
+                continue
 
             visited = set()
             for nghb in self.edges[v]:
@@ -148,6 +157,8 @@ class InterGraph():
         self.spill()
 
         for vertex, color in self.color.items():
+            if vertex[:2] == "%%":
+                continue
             alloc[vertex] = col_to_reg[color]
         for i in range(len(self.spilled)):
             alloc[self.spilled[i]] = -(i + 1) * 8
