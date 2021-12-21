@@ -37,15 +37,15 @@ class InterGraph():
                 if instr.dest is not None:
                     self.nodes.add(instr.dest)
 
-        for (k, l) in self.edges.items():
-            self.edges[k] = [i for i in l if i != k]
-        
     def pre_color(self, tlv):
         for i in range(min(len(tlv.t_args), 6)):
             self.og_color[tlv.t_args[i]] = i + 2
-        #assert tlv.body[-1].opcode == 'ret'
-        #if tlv.body[-1].dest is not None:
-        #    self.og_color[1] = i
+
+        for i in range(1, len(tlv.body), -1):
+            if tlv.body[-1].opcode == 'ret':
+                if tlv.body[-1].dest is not None:
+                    self.og_color[1] = i
+                break
             
     def max_cardinality_search(self):
         """Returns a SEO from the current interference graph"""
