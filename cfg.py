@@ -393,7 +393,10 @@ def recompute_liveness(cfg, livein, liveout):
             liveout[i].add("%%rax")
         elif i.opcode in {'shl', 'shr'}:
             livein[i].add("%%rcx")
-            liveout[i].add("%%rcx")   
+            liveout[i].add("%%rcx")
+        if i.opcode == 'mod':
+            livein[i].add("%%rdx")
+            liveout[i].add("%%rdx")
 
 # ------------------------------------------------------------------------------
 
