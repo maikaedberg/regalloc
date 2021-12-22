@@ -19,7 +19,6 @@ def is_simplicial(restriction, edges):
         # For every neighbour, we check that its neighbours is included
         # in the set of neighbours of the last element of the ordering
         if neighbours.intersection(neighbours2) != neighbours:
-            print(neighbours, neighbours2)
             return False
     return True
 

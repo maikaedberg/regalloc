@@ -45,7 +45,6 @@ class InterGraph():
                 if instr.dest is not None:
                     self.nodes.add(instr.dest)
                     self.edges.setdefault(instr.dest, set())
-        print(self.edges)
 
 
     def pre_color(self, tlv):

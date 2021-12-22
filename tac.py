@@ -134,6 +134,7 @@ class Instr:
         if self._istemp(self.arg1): yield self.arg1
         if self._istemp(self.arg2): yield self.arg2
         if self.opcode == 'phi':
+            print(self.arg1)
             for l, t in self.arg1.items():
                 if self._istemp(t): yield (l, t)
 

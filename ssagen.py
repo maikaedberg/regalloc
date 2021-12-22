@@ -127,7 +127,6 @@ def rename(cfg):
                                     phi += (lab,temp)
 
 
-
 def optimize (cfg):
     optimized = False
     prev = cfg
@@ -142,6 +141,27 @@ def optimize (cfg):
             optimized = True
         prev = cfg
          
+# ------------------------------------------------------------------------------
+def dse(cfg):
+    changed = True
+    while changed:
+        changed = False
+        livein, liveout = dict(), dict()
+        cfglib.recompute_liveness(cfg, livein, liveout)
+
+        label_stack, visited = [cfg.lab_entry], []
+        while len(label_stack) > 0:
+            label = label_stack.pop()
+            for instr in cfg[label].instrs():
+                if instr.opcode in {"call", "div", "mod"}:
+                    continue
+                if instr.dest is None:
+                    continue
+                if instr.dest not in liveout[instr]:
+                    cfg[label].body.remove(instr)
+                    changed = True
+            label_stack += [i for i in cfg.successors(label) if i not in visited]
+            visited.append(label)
 
 # ------------------------------------------------------------------------------
 
