@@ -85,24 +85,8 @@ def tacinstr_to_asm(stack, opcode, args, result):
     elif opcode == 'call':
         assert len(args) == 2
         assert args[0][0] == "@"
-
-        if args[1] > 6 and args[1] % 2 == 1:
-            no_args = args[1] + 1
-            stack.extra_params[no_args] = stack.extra_params[no_args - 1]
-        else:
-            no_args = args[1]
-
-        for N in range(no_args, 6, -1):
-            asm.append(f'\tpushq {stack[stack.extra_params[N]]}')
         
         asm.append(f'\tcallq {args[0].lstrip("@")}')
-
-        e_param = no_args - 6
-        if e_param > 0:
-            asm.append(f'\taddq ${8* e_param}, %rsp')
-        
-        if result is not None:
-            asm.append(f'\tmovq %rax, {stack[result]}')
         
         for r in reversed(stack.alloc_reg):
             asm.append(f'\tpopq {r[1:]}')
@@ -128,16 +112,10 @@ def tacinstr_to_asm(stack, opcode, args, result):
     elif opcode == 'param':
         assert len(args) == 2 and result == None
 
-        if args[0] == 1:
-            for r in stack.alloc_reg:
-                asm.append(f'\tpushq {r[1:]}')
-
-        if args[0] <= 6:
-            proc = first_six_args[args[0]]
-            for instrucs in proc(stack[args[1]]):
-                asm.append('\t' + instrucs)
-        else:
-            stack.extra_params[args[0]] = args[1]
+        for r in stack.alloc_reg:
+            asm.append(f'\tpushq {r[1:]}')
+            
+        asm.append(f'\tmovq {stack[args[1]]}, %rdi')
 
     elif opcode == 'ret':
         if args == []: # VOID RET
