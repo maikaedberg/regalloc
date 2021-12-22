@@ -5,10 +5,13 @@ col_to_reg = {1: '%%rax', 2: '%%rdi', 3: '%%rsi', 4: '%%rdx', 5: '%%rcx',
               11:'%%r13', 12:'%%r14', 13:'%%r15'}
               
 class InterGraph():
-    def __init__(self, tlv):
+    def __init__(self, tlv, cfg = None):
         self.nodes = set()
-        
-        self.cfg = infer(tlv)
+        if cfg is None:
+            self.cfg = infer(tlv)
+        else:
+            self.cfg = cfg
+
         self.edges = {}
         self.build_edges(self.cfg)
         self.spilled = []

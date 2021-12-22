@@ -5,12 +5,12 @@ from tac import Proc, load_tac
 from intergraph import InterGraph
 from cfg import infer, linearize
 
-def regalloc(decl):
-    integraph = InterGraph(decl)
+def regalloc(proc, cfg):
+    integraph = InterGraph(proc, cfg)
     integraph.greedy_coloring()
     stacksize, alloc = integraph.get_allocation_record()
-    decl.stacksize = stacksize
-    decl.alloc = alloc
+    proc.stacksize = stacksize
+    proc.alloc = alloc
 
 def compute_SSA(proc):
     cfg = infer(proc)
@@ -18,6 +18,7 @@ def compute_SSA(proc):
     dse(cfg)
 
     linearize(proc, cfg)
+    return cfg
 
 if __name__ == "__main__":
     argparser = argparse.ArgumentParser(
@@ -36,9 +37,8 @@ if __name__ == "__main__":
     tac_decls = load_tac(source_path)
     for decl in tac_decls:
         if isinstance(decl, Proc):
-            compute_SSA(decl)
-            print(decl)
-            regalloc(decl)
+            cfg = compute_SSA(decl)
+            regalloc(decl, cfg)
 
     etac = [decl.js_obj for decl in tac_decls]
 
