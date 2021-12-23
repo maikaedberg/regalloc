@@ -1,8 +1,8 @@
 from json import load
 import unittest
 from intergraph import InterGraph
-from cfg import CFG, Block
 from tac import load_tac, Proc
+from tac2etac import compute_SSA
 
 def is_simplicial(restriction, edges):
     neighbours = set()
@@ -27,6 +27,13 @@ def is_simplicial_order(SEO, edges):
         if not is_simplicial(SEO[:i], edges):
             return False
     return True
+
+def count_temporaries(set_):
+    count = 0
+    for elem in set_:
+        if elem[:2] != "%%":
+            count += 1
+    return count
 
 class max_card_search(unittest.TestCase):
 
@@ -79,21 +86,6 @@ class getAllocationRecord(unittest.TestCase):
             for neighbour in self.intergraph.edges[node]:
                 self.assertNotEqual(alloc[node], alloc[neighbour])
     
-    def test_allocation_fib(self):
-        fname = "./examples/fib.tac.json"
-        tac = load_tac(fname)
-        for decl in tac:
-            if isinstance(decl, Proc):
-                integraph = InterGraph(decl)
-                integraph.greedy_coloring()
-                stacksize, alloc = integraph.get_allocation_record()
-                self.assertEqual(stacksize, 0)
-                self.assertEqual(len(alloc), len(integraph.nodes))
-
-                for node in self.intergraph.nodes:
-                    for neighbour in self.intergraph.edges[node]:
-                        self.assertNotEqual(alloc[node], alloc[neighbour])
-
     def tearDown(self):
         del self.intergraph
 
@@ -132,6 +124,31 @@ class testsOnFib(unittest.TestCase):
         
         test_alloc(self.fib)
         test_alloc(self.main)
+
+class testOnSimpleLoop(unittest.TestCase):
+    def setUp(self):
+        fname = "./examples/simple_loop.tac.json"
+        tac = load_tac(fname)
+        self.main = tac[0]
+        self.cfg = compute_SSA(self.main)
+    
+    def test_alloc_loop(self):
+        intergraph = InterGraph(self.main, self.cfg)
+        intergraph.greedy_coloring()
+        stacksize, alloc = intergraph.get_allocation_record()
+
+        self.assertEqual(stacksize, 0)
+        self.assertEqual(len(alloc), count_temporaries(intergraph.nodes))
+
+        for node in intergraph.nodes:
+            if node[:2] == "%%":
+                continue
+            for neighbour in intergraph.edges[node]:
+                if neighbour[:2] == "%%":
+                    continue
+                self.assertNotEqual(alloc[node], alloc[neighbour])
+        
+        del intergraph
 
 if __name__ == "__main__":
     unittest.main()
