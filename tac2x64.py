@@ -126,10 +126,7 @@ def tacinstr_to_asm(stack, opcode, args, result):
 
     return asm
 
-def tac_to_asm_f(file):
-    with open(file, "r") as f:
-        js_obj = json.load(f)
-
+def tac_to_asm(js_obj):
     global_vars = []
     stacks = []
 
@@ -157,6 +154,12 @@ def tac_to_asm_f(file):
     asm += gen_dealloc()
 
     return asm
+
+def tac_to_asm_f(file):
+    with open(file, "r") as f:
+        js_obj = json.load(f)
+    
+    return tac_to_asm(js_obj)
 
 def compile_tac(asm, fname):
     if fname.endswith('.tac.json'):
