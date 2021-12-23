@@ -168,12 +168,12 @@ class Instr:
                 'result': self.dest}
 
 class Proc:
-    def __init__(self, name, t_args, body):
+    def __init__(self, name, t_args, body, stacksize = 0, alloc = dict()):
         self.name = name
         self.body = body or []
         self.t_args = tuple(t_args)
-        self.stacksize = 0
-        self.alloc = dict()
+        self.stacksize = stacksize
+        self.alloc = alloc
 
     def __str__(self):
         result = StringIO()
@@ -190,7 +190,9 @@ class Proc:
         assert name.startswith('@')
         args = js_obj.get('args', ())
         body = [Instr.load(i) for i in js_obj.get('body', [])]
-        return Proc(name, args, body)
+        stacksize = js_obj.get("stacksize", 0)
+        alloc = js_obj.get("alloc", dict())
+        return Proc(name, args, body, stacksize, alloc)
 
     @property
     def js_obj(self):
@@ -584,7 +586,7 @@ def load_tac(tac_file):
             lexer = Lexer(text, tac_file)
             parser = Parser(lexer)
             return parser.parse()
-        elif tac_file.endswith('.tac.json'):
+        elif tac_file.endswith('.tac.json') or tac_file.endswith('.etac.json'):
             return [Gvar.load(obj) or Proc.load(obj) \
                     for obj in json.load(fp)]
         else:
