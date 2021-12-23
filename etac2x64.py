@@ -38,49 +38,39 @@ def destruct_ssa(proc):
             new = True
     
     for phi_l in phis:
-        correspondences = dict()
+        correspondences = []
         to = set()
-        from_ = set()
-        cyclic = set()
         for instr in phi_l:
             to.add(instr.dest)
             for label, temp in instr.arg1.items():
-                correspondences.setdefault(instr.dest, []).append((label, temp))
-                from_.add(temp)
+                correspondences.append((temp, instr.dest, label))
     
-        for b, a_list in correspondences.copy().items():
-            for label, a in a_list.copy():
-                if a not in to:
-                    a_list.remove((label, a))
-                    emit(a, b, label, proc)
-                else:
-                    cyclic.add((label, a))
-            if correspondences[b] == []:
-                del correspondences[b]
+        # Eagerly emit a >> b when there is no _ >> a
+        for (a, b, label) in correspondences.copy():
+            if a not in to:
+                correspondences.remove((a, b, label))
+                emit(a, b, label, proc)
         
         while len(correspondences) > 1:
+            # pick a dummy temporary x
             x = fresh(temp_counter)
             temp_counter += 1
 
-            for b, a_list in correspondences.items():
-                label_, a = a_list[0]
-                emit(a, x, label_, proc)
-                break
-            
-            for b, a_list in correspondences.copy().items():
-                for (label, a2) in a_list:
-                    if a2 == a:
-                        a_list.remove((label, a2))
-                        emit(x, b, label, proc)
+            # emit a >> x
+            a, b, label = correspondences[0]
+            emit(a, x, label, proc)
 
-                if correspondences[b] == []:
-                    del correspondences[b]
+            # replace all a >> _ by x >> _
+            for (a2, b, label) in correspondences.copy():
+                if a2 == a:
+                    emit(x, b, label, proc)
+                    correspondences.remove((a2, b, label))
         
         if len(correspondences) == 1:
-            for b, a_list in correspondences.items():
-                for (label, a) in a_list:
-                    emit(a, b, label, proc)
-    
+            (a, b, label) = correspondences[0]
+            emit(a, b, label, proc)
+
+    # remove phi functions from the instructions
     proc.body = [i for i in proc.body if i.opcode != "phi"]
 
         
