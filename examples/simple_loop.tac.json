@@ -1,0 +1,145 @@
+[
+    {
+        "proc": "@main",
+        "args": [],
+        "body": [
+            {
+                "opcode": "const",
+                "args": [
+                    0
+                ],
+                "result": "%0"
+            },
+            {
+                "opcode": "label",
+                "args": [
+                    "%.L0"
+                ],
+                "result": null
+            },
+            {
+                "opcode": "copy",
+                "args": [
+                    "%0"
+                ],
+                "result": "%1"
+            },
+            {
+                "opcode": "const",
+                "args": [
+                    10
+                ],
+                "result": "%2"
+            },
+            {
+                "opcode": "sub",
+                "args": [
+                    "%1",
+                    "%2"
+                ],
+                "result": "%1"
+            },
+            {
+                "opcode": "jle",
+                "args": [
+                    "%1",
+                    "%.L1"
+                ],
+                "result": null
+            },
+            {
+                "opcode": "jmp",
+                "args": [
+                    "%.L2"
+                ],
+                "result": null
+            },
+            {
+                "opcode": "label",
+                "args": [
+                    "%.L1"
+                ],
+                "result": null
+            },
+            {
+                "opcode": "copy",
+                "args": [
+                    "%0"
+                ],
+                "result": "%5"
+            },
+            {
+                "opcode": "const",
+                "args": [
+                    2
+                ],
+                "result": "%6"
+            },
+            {
+                "opcode": "mul",
+                "args": [
+                    "%5",
+                    "%6"
+                ],
+                "result": "%4"
+            },
+            {
+                "opcode": "param",
+                "args": [
+                    1,
+                    "%4"
+                ],
+                "result": null
+            },
+            {
+                "opcode": "call",
+                "args": [
+                    "@__bx_print_int",
+                    1
+                ],
+                "result": null
+            },
+            {
+                "opcode": "copy",
+                "args": [
+                    "%0"
+                ],
+                "result": "%7"
+            },
+            {
+                "opcode": "const",
+                "args": [
+                    1
+                ],
+                "result": "%8"
+            },
+            {
+                "opcode": "add",
+                "args": [
+                    "%7",
+                    "%8"
+                ],
+                "result": "%0"
+            },
+            {
+                "opcode": "jmp",
+                "args": [
+                    "%.L0"
+                ],
+                "result": null
+            },
+            {
+                "opcode": "label",
+                "args": [
+                    "%.L2"
+                ],
+                "result": null
+            },
+            {
+                "opcode": "ret",
+                "args": [],
+                "result": null
+            }
+        ]
+    }
+]
