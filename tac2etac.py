@@ -1,14 +1,14 @@
 import argparse
 import json
-from ssagen import crude_ssagen, dse
+from ssagen import crude_ssagen, dse, optimize
 from tac import Proc, load_tac
 from intergraph import InterGraph
 from cfg import infer, linearize
 
 def regalloc(proc, cfg):
-    integraph = InterGraph(proc, cfg)
-    integraph.greedy_coloring()
-    stacksize, alloc = integraph.get_allocation_record()
+    intergraph = InterGraph(proc, cfg)
+    intergraph.greedy_coloring()
+    stacksize, alloc = intergraph.get_allocation_record()
     proc.stacksize = stacksize
     proc.alloc = alloc
 
@@ -38,6 +38,7 @@ if __name__ == "__main__":
     for decl in tac_decls:
         if isinstance(decl, Proc):
             cfg = compute_SSA(decl)
+            optimize(cfg)
             regalloc(decl, cfg)
 
     etac = [decl.js_obj for decl in tac_decls]
