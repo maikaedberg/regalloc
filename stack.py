@@ -24,6 +24,9 @@ class Stack():
         self.load_temp_map()
 
         self.extra_params = {}
+    
+    def __str__(self):
+        return f"Stack of {self.name}"
 
     def load_temp_map(self):
         """
@@ -45,14 +48,16 @@ class Stack():
                 self.temp_map[arg] = f"{8* (i - 4)}(%rbp)"
 
         body = self.tac["body"]
+
+        for temp, reg in self.alloc.items():
+            self.temp_map[temp] = reg[1:]
+
         for code in body:
             try:
                 temp = code["result"]
             except KeyError:
                 print(code)
-            if temp in self.alloc:
-                self.temp_map[temp] = self.alloc[temp][1:]
-            elif temp is not None and temp[0] == '%' and temp[1:].isnumeric():
+            if temp is not None and temp not in self.alloc and temp[0] == '%':
                 if temp not in self.temp_map.keys():
                     self.temp_count += 1
                     assert -8 * self.temp_count < self.stacksize
