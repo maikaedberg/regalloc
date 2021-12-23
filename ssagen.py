@@ -89,7 +89,7 @@ def null_choice(cfg):
         for instr in Bcopy.body:
             if instr.opcode =='phi':
                 null = True 
-                for _,temp in instr.arg1:
+                for temp in instr.arg1.values():
                     if temp != instr.dest: null = False
                 if null:
                     B.body.remove(instr)
@@ -98,7 +98,7 @@ def rename(cfg):
     '''Remove a rename phi instr'''    
     livein, liveout = dict(), dict()
     cfglib.recompute_liveness(cfg, livein, liveout)
-    Bl=next(cfg.nodes) 
+    Bl=next(cfg.nodes()) 
     init_args=livein[Bl.first_instr()] #livein for the first instruction
     for B in cfg._blockmap.values():
         for instr in B.body:
@@ -106,7 +106,7 @@ def rename(cfg):
                 dest_root, dest_ver = tuple(instr.dest.split('.'))
                 v = [dest_ver]
                 rename = True
-                for _,temp in instr.arg1:
+                for temp in instr.arg1.values():
                     if not tmp_root(temp) in init_args:
 
                         root, ver = tuple(temp.split('.') )
@@ -118,7 +118,7 @@ def rename(cfg):
                             rename = False
                         if rename:
                             instr.dest = dest_root+'.'+v[-1]
-                            for lab,temp in instr.arg1:
+                            for lab,temp in instr.arg1.items():
                                 phi = tuple()
                                 root, ver = tuple(temp.split('.') )
                                 if ver != v[-1]:
