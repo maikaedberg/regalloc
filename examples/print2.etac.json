@@ -1,0 +1,47 @@
+[
+  {
+    "proc": "@main",
+    "args": [],
+    "stacksize": 0,
+    "alloc": {
+      "%0.0": "%%rax"
+    },
+    "body": [
+      {
+        "opcode": "label",
+        "args": [
+          "%.L0"
+        ],
+        "result": null
+      },
+      {
+        "opcode": "const",
+        "args": [
+          2
+        ],
+        "result": "%0.0"
+      },
+      {
+        "opcode": "param",
+        "args": [
+          1,
+          "%0.0"
+        ],
+        "result": null
+      },
+      {
+        "opcode": "call",
+        "args": [
+          "@__bx_print_int",
+          1
+        ],
+        "result": null
+      },
+      {
+        "opcode": "ret",
+        "args": [],
+        "result": null
+      }
+    ]
+  }
+]
