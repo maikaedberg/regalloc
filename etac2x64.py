@@ -1,6 +1,6 @@
 import argparse
-import json
 import os
+from ssagen import tmp_root
 from tac import load_tac, Proc, Instr
 from tac2x64 import tac_to_asm
 
@@ -24,13 +24,17 @@ def emit(a, b, label, proc):
     proc.body.insert(end, copy)
 
 def fresh(temp_counter):
-    return f"%dummy.{temp_counter}"
+    return f"%{temp_counter}"
 
 def destruct_ssa(proc):
-    temp_counter = 0
     phis = []
     new = True
+    max_temp = 0
     for instr in proc.body:
+        if instr._istemp(instr.dest):
+            root = tmp_root(instr.dest)
+            if root[1:].isnumeric():
+                max_temp = max(int(root[1:])+1, max_temp)
         if instr.opcode == "phi":
             if new:
                 phis.append([instr])
@@ -56,8 +60,8 @@ def destruct_ssa(proc):
         
         while len(correspondences) > 1:
             # pick a dummy temporary x
-            x = fresh(temp_counter)
-            temp_counter += 1
+            x = fresh(max_temp)
+            max_temp += 1
 
             # emit a >> x
             a, b, label = correspondences[0]
