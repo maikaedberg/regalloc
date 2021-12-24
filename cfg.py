@@ -390,6 +390,15 @@ def recompute_liveness(cfg, livein, liveout):
     for i in cfg.instrs():
         livein[i] = set(i.uses())
         liveout[i] = set()
+        if i.opcode in {'mul', 'div', 'mod'}:
+            livein[i].add("%%rax")
+            liveout[i].add("%%rax")
+        elif i.opcode in {'shl', 'shr'}:
+            livein[i].add("%%rcx")
+            liveout[i].add("%%rcx")
+        if i.opcode == 'mod':
+            livein[i].add("%%rdx")
+            liveout[i].add("%%rdx")
     dirty = True
     def update_livein(i, j_livein):
         nonlocal dirty
@@ -416,17 +425,6 @@ def recompute_liveness(cfg, livein, liveout):
     for i, li in livein.items():
         livein[i] = {x[1] if isinstance(x, tuple) else x \
                      for x in li}
-
-    for i in cfg.instrs():
-        if i.opcode in {'mul', 'div', 'mod'}:
-            livein[i].add("%%rax")
-            liveout[i].add("%%rax")
-        elif i.opcode in {'shl', 'shr'}:
-            livein[i].add("%%rcx")
-            liveout[i].add("%%rcx")
-        if i.opcode == 'mod':
-            livein[i].add("%%rdx")
-            liveout[i].add("%%rdx")
 
 # ------------------------------------------------------------------------------
 
