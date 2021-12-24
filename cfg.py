@@ -190,6 +190,36 @@ class CFG:
                 for lab_to in lab_tos:
                     print(f'{lab_from[2:]} -> {lab_to[2:]};', file=f)
             print('}', file=f)
+            
+    def propogate(cfg, new, old):
+        nodes = cfg._blockmap
+        for node in nodes.values():
+            instrs = [instr for instr in node.instrs()]
+            for instr in instrs:
+                if instr.dest == new:
+                    instr.dest = old
+
+                if isinstance(instr.arg1, dict):
+                    arg1 = {}
+                    for k,v in instr.arg1.items():
+                        if v == new:
+                            arg1[k] = old
+                        else:
+                            arg1[k] = v
+                    instr.arg1 = arg1
+                elif instr.arg1 == new:
+                    instr.arg1 = old
+
+                if isinstance(instr.arg2, dict):
+                    arg2 = {}
+                    for k,v in instr.arg2.items():
+                        if v == new:
+                            arg2[k] = old
+                        else:
+                            arg2[k] = v
+                    instr.arg2 = arg2
+                elif instr.arg2 is not None and instr.arg2 == new:
+                    instr.arg2 = old
 
 # ------------------------------------------------------------------------------
 
