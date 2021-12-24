@@ -184,10 +184,8 @@ class InterGraph():
                     dest = instr.dest
                     
                     if self.color[src] == self.color[dest]:
-                        print("here")
                         block.body.remove(instr)
                     elif (src not in self.next(dest)) and (c := self.compute_free(src,dest)):
-                        print("here")
                         # Create a new temporary with color c
                         new_temp = fresh(max_temp)
                         max_temp += 1
@@ -237,7 +235,7 @@ class InterGraph():
     
     def next(self, v):
         visited = {v}
-        to_visit = self.edges[v]
+        to_visit = self.edges[v].copy()
 
         while len(to_visit) > 0:
             node = to_visit.pop()

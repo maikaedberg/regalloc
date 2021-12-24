@@ -9,10 +9,10 @@ from cfg import infer, linearize
 def regalloc(proc, cfg, coalesce = True):
     intergraph = InterGraph(proc, cfg)
     intergraph.greedy_coloring()
-    stacksize, alloc = intergraph.get_allocation_record()
     if coalesce:
         intergraph.register_coalesce()
         linearize(proc, intergraph.cfg)
+    stacksize, alloc = intergraph.get_allocation_record()
     proc.stacksize = stacksize
     proc.alloc = alloc
 
