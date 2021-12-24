@@ -166,5 +166,50 @@ class InterGraph():
             alloc[self.spilled[i]] = -(i + 1) * 8
 
         return (stack_size, alloc)
+    
+        def register_coalesce(self):
+            cfg=self.cfg
+        for instr in cfg.instrs():
+            if instr.opcode=='copy':
+                src=instr.arg1
+                dest=instr.dest
+                
+                if self.color(src)==self.color(dest):
+                    cfg.remove_instr(instr) #needs to be added
+                elif src not in self.next(dest) and len(self.compute_free(src,dest)>0):
+                    c=new_temp() #new temp s.t. col(%c) = c 
+                    
+                    self.new_connect(src, c)
+                    self.new_connect(dest, c)
+                    self.delete_node(src), self.delete_node(dest)
+                    cfg.propogate(src, c)
+                    cfg.propogate(dest, c)
+                    self.build_edges(cfg)
+                    
+                    
+    def new_connect(self, v, new):
+        nbors=self.next(v)
+        for a in nbors:
+            self.edges[a].add(new)    
+    
+    def compute_free(self,a,b):
+        res=set()
+        for u in self.color:
+            if u in self.next(a) or u in self.next(b):
+                res.add(self.color[u])
+        return res
+    
+    # def is_redundant_copy(self, instr) -> bool:
+    #     src=instr.arg1
+    #     dest=instr.dest
+    #     return (instr.opcode=='copy' and src!=dest and self.color(src)!=self.color(dest))
+    
+    def delete_node(self, v):
+        for k,target in self.edges:
+            if v in target:
+                self.edges[k].remove(v)
+        self.nodes.remove(v)
             
+    def next(self, v):
+        return set(self.edges[v])
    
