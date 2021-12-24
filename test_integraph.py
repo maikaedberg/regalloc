@@ -1,4 +1,3 @@
-from json import load
 import unittest
 from intergraph import InterGraph, is_simplicial_order
 from tac import load_tac, Proc

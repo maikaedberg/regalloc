@@ -3,7 +3,6 @@
 import tac
 import cfg as cfglib
 import re, random, os
-from copy import copy 
 # ------------------------------------------------------------------------------
 # liveness
 
