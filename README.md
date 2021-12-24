@@ -43,15 +43,3 @@ Use:
 python3 regalloc.py path/file.tac.json --no-exe
 ```
 Where the ```--no-exe``` flag is the same as for etac2x64.# regalloc
-
-In this project we have implemented register allocation for TAC to generate efficient x64 by using multiple registers at once.
-
-To do so we have implemented the following:
-- SSA minimization
-    - Null choice elimination
-    - 
-- Register allocation
-    - The creation of an interference graph
-    - Max Cardinality Search to find a Simplicial Elimination Ordering
-    - Greedy coloring of the graph using the SEO
-    - Temporary Spilling
