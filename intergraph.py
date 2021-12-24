@@ -177,7 +177,7 @@ class InterGraph():
                 if self.color(src)==self.color(dest):
                     cfg.remove_instr(instr) #needs to be added
                 elif src not in self.next(dest) and len(self.compute_free(src,dest)>0):
-                    c=new_temp() #new temp s.t. col(%c) = c 
+                    c=new_temp() #new temp s.t. col(%c) = c, c in compute free 
                     
                     self.new_connect(src, c)
                     self.new_connect(dest, c)
