@@ -12,6 +12,9 @@ def emit(a, b, label, proc):
         if instr.opcode == "label" and instr.arg1 == label:
             beginning = i
             break
+    else:
+        # raise ValueError(f"Label {label} not found")
+        return
     end = beginning
 
     while proc.body[end].opcode[0] != "j" and proc.body[end].opcode != "ret":
