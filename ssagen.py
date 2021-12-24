@@ -80,7 +80,7 @@ def crude_ssagen(tlv, cfg):
             for lab_prev, root in instr.arg1.items():
                 instr.arg1[lab_prev] = ver_maps[lab_prev].get(root, root)
               
-
+# ------------------------------------------------------------------------------
 def replace(cfg, u, v):
     """
     Go over the whole cfg, replacing any instance of the temporary u with v
@@ -95,7 +95,6 @@ def replace(cfg, u, v):
             else:
                 if instr.arg1 == u: instr.arg1 = v
                 if instr.arg2 == u: instr.arg2 = v
-
 
 
 def null_choice(cfg):

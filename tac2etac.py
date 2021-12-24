@@ -32,10 +32,15 @@ if __name__ == "__main__":
         "-o",
         help="Allows to specify output file name for the optimized TAC",
     )
+    argparse.add_argument('--print', help="Print the produced etac to standard output", action='store_true')
 
     args = argparser.parse_args()
     source_path = args.source_path
     output_path = args.o
+    print_ = args.print
+
+    if not source_path.endswith('.tac.json'):
+        raise ValueError(f'{source_path} not a .tac.json file')
 
     tac_decls = load_tac(source_path)
     for decl in tac_decls:
@@ -45,8 +50,13 @@ if __name__ == "__main__":
 
     etac = [decl.js_obj for decl in tac_decls]
 
-    if not output_path:
+    if print_:
         print(json.dumps(etac, indent=2))
+
+    if not output_path:
+        rname = source_path[:-9] + '.etac.json'
+        with open(rname, "w") as f:
+            f.write(json.dumps(etac, indent=2))
     else:
         with open(output_path, "w") as f:
             f.write(json.dumps(etac, indent=2))

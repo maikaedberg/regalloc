@@ -76,17 +76,15 @@ def destruct_ssa(proc):
         
 if __name__ == "__main__":
     argparser = argparse.ArgumentParser(
-        description="Accepts a TAC file and produces ETAC with allocation records"
+        description="Accepts a ETAC file and produces the corresponding .s and .exe files"
     )
-    argparser.add_argument("source_path", help="path to TAC file in JSON or text", type=str)
-    argparser.add_argument(
-        "-o",
-        help="Allows to specify output file name for the optimized TAC",
-    )
+    argparser.add_argument("source_path", help="path to ETAC file in JSON or text", type=str)
 
     args = argparser.parse_args()
     source_path = args.source_path
-    output_path = args.o
+
+    if not source_path.endswith('.etac.json'):
+        raise ValueError(f'{source_path} not a .etac.json file')
 
     tac_decls = load_tac(source_path)
     for decl in tac_decls:
@@ -101,6 +99,4 @@ if __name__ == "__main__":
     sname = rname + '.s'
     with open(sname, 'w') as afp:
         print(*asm, file=afp, sep='\n')
-    # print(f'{fname} -> {sname}')
     os.system(f'gcc -g -o {xname} {sname} bx_runtime.c')
-    # print(f'{sname} -> {xname}')
