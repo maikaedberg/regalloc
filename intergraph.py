@@ -1,4 +1,5 @@
-from cfg import CFG, recompute_liveness, infer
+from cfg import recompute_liveness, infer
+from ssagen import replace, tmp_root
 
 col_to_reg = {1: '%%rax', 2: '%%rdi', 3: '%%rsi', 4: '%%rdx', 5: '%%rcx',
               6:'%%r8', 7:'%%r9', 8:'%%r10', 9: '%%rbx', 10:'%%r12', 
@@ -169,50 +170,84 @@ class InterGraph():
         return (stack_size, alloc)
     
     def register_coalesce(self):
-        cfg=self.cfg
-        for instr in cfg.instrs():
-            if instr.opcode=='copy':
-                src=instr.arg1
-                dest=instr.dest
-                
-                if self.color(src)==self.color(dest):
-                    cfg.remove_instr(instr) #needs to be added
-                elif src not in self.next(dest) and len(self.compute_free(src,dest)>0):
-                    c=new_temp() #new temp s.t. col(%c) = c, c in compute free 
+        max_temp = 0
+        for instr in self.cfg.instrs():
+            if instr.dest is not None:
+                root = tmp_root(instr.dest)
+                if root[1:].isnumeric():
+                    max_temp = max(int(root[1:])+1, max_temp)
+
+        for block in self.cfg.nodes():
+            for instr in block.body.copy():
+                if instr.opcode == 'copy':
+                    src = instr.arg1
+                    dest = instr.dest
                     
-                    self.new_connect(src, c)
-                    self.new_connect(dest, c)
-                    self.delete_node(src), self.delete_node(dest)
-                    cfg.propogate(src, c)
-                    cfg.propogate(dest, c)
-                    self.build_edges(cfg)
-                    
-                    
-    def new_connect(self, v, new):
-        nbors=self.next(v)
-        for a in nbors:
-            self.edges[a].add(new)    
+                    if self.color[src] == self.color[dest]:
+                        print("here")
+                        block.body.remove(instr)
+                    elif (src not in self.next(dest)) and (c := self.compute_free(src,dest)):
+                        print("here")
+                        # Create a new temporary with color c
+                        new_temp = fresh(max_temp)
+                        max_temp += 1
+                        self.nodes.add(new_temp)
+                        self.edges.setdefault(new_temp, set())
+
+                        self.color[new_temp] = c
+
+                        # Connect new_temp to all neighbors of src and dest
+                        for neighbor in self.edges[src]:
+                            self.edges[neighbor].add(new_temp)
+                            self.edges[new_temp].add(neighbor)
+                        
+                        for neighbor in self.edges[dest]:
+                            self.edges[neighbor].add(new_temp)
+                            self.edges[new_temp].add(neighbor)
+                        
+                        # Remove src and dest from the graph
+                        self.nodes.remove(src)
+                        self.nodes.remove(dest)
+
+                        del self.edges[src]
+                        del self.edges[dest]
+
+                        for neighbors in self.edges.values():
+                            neighbors.discard(src)
+                            neighbors.discard(dest)
+                        
+                        # Replace src and dest by new_temp
+                        replace(self.cfg, src, new_temp)
+                        replace(self.cfg, dest, new_temp)
+                        
+    def compute_free(self, a, b):
+        cols = set()
+        for u in self.next(a):
+            cols.add(self.color[u])
+        for u in self.next(b):
+            cols.add(self.color[u])
+        
+        all_colors = set(range(1, 14))
+        possible_colors = all_colors - cols
+        print(possible_colors)
+        if len(possible_colors) > 0:
+            return possible_colors.pop()
+        else:
+            return 0
     
-    def compute_free(self,a,b):
-        res=set()
-        for u in self.color:
-            if u in self.next(a) or u in self.next(b):
-                res.add(self.color[u])
-        return res
-    
-    # def is_redundant_copy(self, instr) -> bool:
-    #     src=instr.arg1
-    #     dest=instr.dest
-    #     return (instr.opcode=='copy' and src!=dest and self.color(src)!=self.color(dest))
-    
-    def delete_node(self, v):
-        for k,target in self.edges:
-            if v in target:
-                self.edges[k].remove(v)
-        self.nodes.remove(v)
-            
     def next(self, v):
-        return set(self.edges[v])
+        visited = {v}
+        to_visit = self.edges[v]
+
+        while len(to_visit) > 0:
+            node = to_visit.pop()
+            visited.add(node)
+            for neighbour in self.edges[node]:
+                if neighbour not in visited:
+                    to_visit.add(neighbour)
+
+        visited.remove(v)
+        return visited
    
 
 # ------------------------------------------------------------------------------
@@ -239,3 +274,6 @@ def is_simplicial_order(SEO, edges):
         if not is_simplicial(SEO[:i], edges):
             return False
     return True
+
+def fresh(temp_counter):
+    return f"%{temp_counter}"
