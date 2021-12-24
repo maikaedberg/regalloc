@@ -76,7 +76,7 @@
                 "result": "%6"
             },
             {
-                "opcode": "sum",
+                "opcode": "mul",
                 "args": [
                     "%5",
                     "%6"
