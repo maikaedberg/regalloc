@@ -26,29 +26,30 @@ class InterGraph():
 
         for instr in cfg.instrs():
             if instr.opcode == 'copy':
-                for x in liveout[instr]:
-                    if x != instr.arg1:
-                        self.edges.setdefault(x, set()).add(instr.arg1)
-                        self.edges.setdefault(instr.arg1, set()).add(x)
-                    if x != instr.dest:
-                        self.edges.setdefault(instr.dest, set()).add(x)
-                    self.nodes.add(x)
-                    self.edges.setdefault(x, set())
+                # use(I) = I.arg1, def(I) = I.dest
                 self.nodes.add(instr.arg1)
                 self.nodes.add(instr.dest)
                 self.edges.setdefault(instr.arg1, set())
                 self.edges.setdefault(instr.dest, set())
-            else:
                 for x in liveout[instr]:
-                    if instr.dest is not None and x != instr.dest:
-                        self.edges.setdefault(x, set()).add(instr.dest)
-                        self.edges.setdefault(instr.dest, set()).add(x)
                     self.nodes.add(x)
                     self.edges.setdefault(x, set())
-                if instr.dest is not None:
-                    self.nodes.add(instr.dest)
-                    self.edges.setdefault(instr.dest, set())
-
+                    if x != instr.arg1:
+                        self.edges[x].add(instr.arg1)
+                        self.edges[instr.arg1].add(x)
+                    if x != instr.dest:
+                        self.edges[x].add(instr.dest)
+                        self.edges[instr.dest].add(x)
+            else:
+                for x in liveout[instr]:
+                    self.nodes.add(x)
+                    self.edges.setdefault(x, set())
+                    for y in instr.defs():
+                        self.nodes.add(y)
+                        self.edges.setdefault(y, set())
+                        if y != x:
+                            self.edges[x].add(y)
+                            self.edges[y].add(x)
 
     def pre_color(self, tlv):
         for i in range(min(len(tlv.t_args), 6)):
