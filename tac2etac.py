@@ -1,5 +1,6 @@
 import argparse
 import json
+import copy
 from ssagen import crude_ssagen, dse, optimize
 from tac import Proc, load_tac
 from intergraph import InterGraph
@@ -17,7 +18,9 @@ def compute_SSA(proc):
     crude_ssagen(proc, cfg)
     dse(cfg)
 
-    linearize(proc, cfg)
+    cfg2 = copy.deepcopy(cfg)
+    linearize(proc, cfg2)
+    optimize(cfg)
     return cfg
 
 if __name__ == "__main__":
@@ -38,7 +41,6 @@ if __name__ == "__main__":
     for decl in tac_decls:
         if isinstance(decl, Proc):
             cfg = compute_SSA(decl)
-            optimize(cfg)
             regalloc(decl, cfg)
 
     etac = [decl.js_obj for decl in tac_decls]
