@@ -396,7 +396,7 @@ def recompute_liveness(cfg, livein, liveout):
         elif i.opcode in {'shl', 'shr'}:
             livein[i].add("%%rcx")
             liveout[i].add("%%rcx")
-        if i.opcode == 'mod':
+        if i.opcode == 'mod' or i.opcode == 'div':
             livein[i].add("%%rdx")
             liveout[i].add("%%rdx")
     dirty = True
