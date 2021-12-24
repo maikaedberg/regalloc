@@ -169,22 +169,22 @@ class InterGraph():
     
     def register_coalesce(self):
         cfg=self.cfg
-    for instr in cfg.instrs():
-        if instr.opcode=='copy':
-            src=instr.arg1
-            dest=instr.dest
-            
-            if self.color(src)==self.color(dest):
-                cfg.remove_instr(instr) #needs to be added
-            elif src not in self.next(dest) and len(self.compute_free(src,dest)>0):
-                c=new_temp() #new temp s.t. col(%c) = c 
+        for instr in cfg.instrs():
+            if instr.opcode=='copy':
+                src=instr.arg1
+                dest=instr.dest
                 
-                self.new_connect(src, c)
-                self.new_connect(dest, c)
-                self.delete_node(src), self.delete_node(dest)
-                cfg.propogate(src, c)
-                cfg.propogate(dest, c)
-                self.build_edges(cfg)
+                if self.color(src)==self.color(dest):
+                    cfg.remove_instr(instr) #needs to be added
+                elif src not in self.next(dest) and len(self.compute_free(src,dest)>0):
+                    c=new_temp() #new temp s.t. col(%c) = c 
+                    
+                    self.new_connect(src, c)
+                    self.new_connect(dest, c)
+                    self.delete_node(src), self.delete_node(dest)
+                    cfg.propogate(src, c)
+                    cfg.propogate(dest, c)
+                    self.build_edges(cfg)
                     
                     
     def new_connect(self, v, new):
