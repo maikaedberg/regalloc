@@ -167,6 +167,7 @@ class InterGraph():
 
         return (stack_size, alloc)
             
+<<<<<<< HEAD
     def register_coalesce(self):
         cfg=self.cfg
         for instr in cfg.instrs():
@@ -213,3 +214,28 @@ class InterGraph():
     def next(self, v):
         return set(self.edges[v])
    
+=======
+def is_simplicial(restriction, edges):
+    neighbours = set()
+    for node in edges[restriction[-1]]:
+        if node in restriction:
+            neighbours.add(node)
+    
+    for neighbour in neighbours:
+        neighbours2 = {neighbour} 
+        for neighbour2 in edges[neighbour]:
+            if neighbour2 in restriction:
+                neighbours2.add(neighbour2)
+
+        # For every neighbour, we check that its neighbours is included
+        # in the set of neighbours of the last element of the ordering
+        if neighbours.intersection(neighbours2) != neighbours:
+            return False
+    return True
+
+def is_simplicial_order(SEO, edges):
+    for i in range(1, len(SEO)):
+        if not is_simplicial(SEO[:i], edges):
+            return False
+    return True
+>>>>>>> 725c6dd7601eadde2b9c8e91a1f958e6240caff0

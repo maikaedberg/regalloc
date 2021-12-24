@@ -81,65 +81,65 @@ def crude_ssagen(tlv, cfg):
                 instr.arg1[lab_prev] = ver_maps[lab_prev].get(root, root)
               
 
+def replace(cfg, u, v):
+    """
+    Go over the whole cfg, replacing any instance of the temporary u with v
+    """
+    for block in cfg.nodes():
+        for instr in block.body:
+            if instr.dest == u: instr.dest = v
+            if instr.opcode == "phi":
+                for label, temp in instr.arg1.copy().items():
+                    if temp == u:
+                        instr.arg1[label] = v
+            else:
+                if instr.arg1 == u: instr.arg1 = v
+                if instr.arg2 == u: instr.arg2 = v
+
+
 
 def null_choice(cfg):
     '''remove a phi instr if it is redundent'''
-    for B in cfg._blockmap.values():
-        Bcopy =copy(B)
-        for instr in Bcopy.body:
-            if instr.opcode =='phi':
-                null = True 
-                for temp in instr.arg1.values():
-                    if temp != instr.dest: null = False
-                if null:
-                    B.body.remove(instr)
+    changed = False
+    for block in cfg.nodes():
+        for instr in block.body.copy():
+            if instr.opcode == "phi":
+                if all(temp == instr.dest for temp in instr.arg1.values()):
+                    block.body.remove(instr)
+                    changed = True
+    
+    return changed
 
 def rename(cfg):
     '''Remove a rename phi instr'''    
-    livein, liveout = dict(), dict()
-    cfglib.recompute_liveness(cfg, livein, liveout)
-    Bl=next(cfg.nodes()) 
-    init_args=livein[Bl.first_instr()] #livein for the first instruction
-    for B in cfg._blockmap.values():
-        for instr in B.body:
-            if instr.opcode =='phi':
-                dest_root, dest_ver = tuple(instr.dest.split('.'))
-                v = [dest_ver]
-                rename = True
+    changed = False
+    for block in cfg.nodes():
+        for instr in block.body:
+            if instr.opcode == "phi":
+                root = tmp_root(instr.dest)
+                u = tmp_version(instr.dest)
+                v = None
                 for temp in instr.arg1.values():
-                    if not tmp_root(temp) in init_args:
-
-                        root, ver = tuple(temp.split('.') )
-                        if root != dest_root: 
-                            rename = False
-                        if len(v) <2 and ver != v[-1]:
-                            v.append(ver)
-                        elif not ver in v:
-                            rename = False
-                        if rename:
-                            instr.dest = dest_root+'.'+v[-1]
-                            for lab,temp in instr.arg1.items():
-                                phi = tuple()
-                                root, ver = tuple(temp.split('.') )
-                                if ver != v[-1]:
-                                    phi += (lab,dest_root+'.'+v[-1])
-                                else:
-                                    phi += (lab,temp)
-
+                    temp_root = tmp_root(temp)
+                    temp_version = tmp_version(temp)
+                    if temp_root != root:
+                        break
+                    if v is None:
+                        v = temp_version
+                    elif temp_version != v and temp_version != u:
+                        break
+                else:
+                    if v is not None:
+                        replace(cfg, root + '.' + u, root + '.' + v)
+                        changed = True
+    return changed
 
 def optimize (cfg):
-    optimized = False
-    prev = cfg
-    while not optimized:
-        null_choice(cfg)
-        rename(cfg)
-        changed = True
-        for Lab,B in cfg._blockmap.items():
-            if B.body == prev._blockmap[Lab].body:
-                changed = False 
-        if not changed:
-            optimized = True
-        prev = cfg
+    changed = True
+    while changed:
+        changed = False
+        changed |= null_choice(cfg)
+        changed |= rename(cfg)
          
 # ------------------------------------------------------------------------------
 def dse(cfg):
