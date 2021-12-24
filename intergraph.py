@@ -62,20 +62,20 @@ class InterGraph():
             
     def max_cardinality_search(self):
         """Returns a SEO from the current interference graph"""
-        node = None
+        vertex = None
         # Get one element from the set
         for node in self.nodes:
             vertex = node
             break
 
-        if node is None:
+        if vertex is None:
             return []
 
         SEO = [vertex]
         cards = {v : 0 for v in self.edges if v != vertex}
 
         while len(SEO) < len(self.nodes):
-            for v in self.edges[vertex]:
+            for v in self.edges[SEO[-1]]:
                 if v in cards:
                     cards[v] += 1
             v_max = max(cards, key = cards.get)
