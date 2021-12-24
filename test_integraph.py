@@ -1,32 +1,9 @@
 from json import load
 import unittest
-from intergraph import InterGraph
+from intergraph import InterGraph, is_simplicial_order
 from tac import load_tac, Proc
 from tac2etac import compute_SSA
 
-def is_simplicial(restriction, edges):
-    neighbours = set()
-    for node in edges[restriction[-1]]:
-        if node in restriction:
-            neighbours.add(node)
-    
-    for neighbour in neighbours:
-        neighbours2 = {neighbour} 
-        for neighbour2 in edges[neighbour]:
-            if neighbour2 in restriction:
-                neighbours2.add(neighbour2)
-        
-        # For every neighbour, we check that its neighbours is included
-        # in the set of neighbours of the last element of the ordering
-        if neighbours.intersection(neighbours2) != neighbours:
-            return False
-    return True
-
-def is_simplicial_order(SEO, edges):
-    for i in range(1, len(SEO)):
-        if not is_simplicial(SEO[:i], edges):
-            return False
-    return True
 
 def count_temporaries(set_):
     count = 0
@@ -148,6 +125,13 @@ class testOnSimpleLoop(unittest.TestCase):
                     continue
                 self.assertNotEqual(alloc[node], alloc[neighbour])
         
+        del intergraph
+
+    def test_MCS_simple_loop(self):
+        intergraph = InterGraph(self.main, self.cfg)
+        SEO = intergraph.max_cardinality_search()
+        self.assertTrue(is_simplicial_order(SEO, intergraph.edges))
+
         del intergraph
 
 if __name__ == "__main__":
