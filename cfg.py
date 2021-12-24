@@ -263,7 +263,7 @@ def add_admin_labels(tac_proc):
     At the end, every jump will be followed by at least one label"""
     instrs, tac_proc.body = tac_proc.body, []
     name = tac_proc.name[1:]
-    admin_labels = counter(transfn=lambda x: f'%.L{name}{x}')
+    admin_labels = counter(transfn=lambda x: f'%.L{name}admin{x}')
     tac_proc.body.append(tac.Instr(None, 'label', (next(admin_labels), None)))
     cur = 0
     while cur < len(instrs):
