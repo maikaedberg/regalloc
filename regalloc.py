@@ -1,5 +1,4 @@
 import argparse
-import json
 import os
 from etac2x64 import destruct_ssa
 from tac import Proc, load_tac
@@ -12,10 +11,12 @@ if __name__ == "__main__":
     )
     argparser.add_argument("source_path", help="path to TAC file in JSON or text", type=str)
     argparser.add_argument("--no-exe", help="Turns off the creation of a .exe", action="store_true")
+    argparser.add_argument("--no-coalescing", help="Turns off register coalescing", action="store_false")
 
     args = argparser.parse_args()
     source_path = args.source_path
     no_exe = args.no_exe
+    coalesce = args.no_coalescing
 
     tac_decls = load_tac(source_path)
     for decl in tac_decls:
@@ -24,7 +25,7 @@ if __name__ == "__main__":
             cfg = compute_SSA(decl)
 
             # register allocation
-            regalloc(decl, cfg)
+            regalloc(decl, cfg, coalesce)
 
             # SSA destruction
             destruct_ssa(decl)

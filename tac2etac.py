@@ -6,10 +6,13 @@ from tac import Proc, load_tac
 from intergraph import InterGraph
 from cfg import infer, linearize
 
-def regalloc(proc, cfg):
+def regalloc(proc, cfg, coalesce = True):
     intergraph = InterGraph(proc, cfg)
     intergraph.greedy_coloring()
     stacksize, alloc = intergraph.get_allocation_record()
+    if coalesce:
+        intergraph.register_coalesce()
+        linearize(proc, intergraph.cfg)
     proc.stacksize = stacksize
     proc.alloc = alloc
 
@@ -33,11 +36,13 @@ if __name__ == "__main__":
         help="Allows to specify output file name for the optimized TAC",
     )
     argparser.add_argument('--print', help="Print the produced etac to standard output", action='store_true')
+    argparser.add_argument("--no-coalescing", help="Turns off register coalescing", action="store_false")
 
     args = argparser.parse_args()
     source_path = args.source_path
     output_path = args.o
     print_ = args.print
+    coalesce = args.no_coalescing
 
     if not source_path.endswith('.tac.json'):
         raise ValueError(f'{source_path} not a .tac.json file')
@@ -46,7 +51,7 @@ if __name__ == "__main__":
     for decl in tac_decls:
         if isinstance(decl, Proc):
             cfg = compute_SSA(decl)
-            regalloc(decl, cfg)
+            regalloc(decl, cfg, coalesce)
 
     etac = [decl.js_obj for decl in tac_decls]
 
