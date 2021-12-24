@@ -79,9 +79,11 @@ if __name__ == "__main__":
         description="Accepts a ETAC file and produces the corresponding .s and .exe files"
     )
     argparser.add_argument("source_path", help="path to ETAC file in JSON or text", type=str)
+    argparser.add_argument("--no-exe", help="Turns off the creation of a .exe", action="store_true")
 
     args = argparser.parse_args()
     source_path = args.source_path
+    no_exe = args.no_exe
 
     if not source_path.endswith('.etac.json'):
         raise ValueError(f'{source_path} not a .etac.json file')
@@ -99,4 +101,5 @@ if __name__ == "__main__":
     sname = rname + '.s'
     with open(sname, 'w') as afp:
         print(*asm, file=afp, sep='\n')
-    os.system(f'gcc -g -o {xname} {sname} bx_runtime.c')
+    if not no_exe:
+        os.system(f'gcc -g -o {xname} {sname} bx_runtime.c')
