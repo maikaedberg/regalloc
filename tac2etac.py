@@ -17,10 +17,10 @@ def compute_SSA(proc):
     cfg = infer(proc)
     crude_ssagen(proc, cfg)
     dse(cfg)
+    optimize(cfg)
 
     cfg2 = copy.deepcopy(cfg)
     linearize(proc, cfg2)
-    optimize(cfg)
     return cfg
 
 if __name__ == "__main__":
@@ -32,7 +32,7 @@ if __name__ == "__main__":
         "-o",
         help="Allows to specify output file name for the optimized TAC",
     )
-    argparse.add_argument('--print', help="Print the produced etac to standard output", action='store_true')
+    argparser.add_argument('--print', help="Print the produced etac to standard output", action='store_true')
 
     args = argparser.parse_args()
     source_path = args.source_path

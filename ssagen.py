@@ -109,6 +109,13 @@ def null_choice(cfg):
     
     return changed
 
+def reassemble(root, version):
+    version = version.strip()
+    if version != '':
+        return root + '.' + version
+    else:
+        return root
+
 def rename(cfg):
     '''Remove a rename phi instr'''    
     changed = False
@@ -123,13 +130,15 @@ def rename(cfg):
                     temp_version = tmp_version(temp)
                     if temp_root != root:
                         break
-                    if v is None:
+                    if v is None and temp_version != u:
                         v = temp_version
                     elif temp_version != v and temp_version != u:
                         break
                 else:
                     if v is not None:
-                        replace(cfg, root + '.' + u, root + '.' + v)
+                        full_u = reassemble(root, u)
+                        full_v = reassemble(root, v)
+                        replace(cfg, full_u, full_v)
                         changed = True
     return changed
 
@@ -137,9 +146,10 @@ def optimize (cfg):
     changed = True
     while changed:
         changed = False
-        changed |= null_choice(cfg)
         changed |= rename(cfg)
-         
+    
+    null_choice(cfg)
+
 # ------------------------------------------------------------------------------
 def dse(cfg):
     changed = True
